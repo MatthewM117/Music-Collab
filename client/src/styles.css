@@ -1,0 +1,39 @@
+.grid {
+    display: table;
+    border-collapse: collapse;
+}
+
+.grid-container {
+    overflow-x: scroll;
+    width: 75vw;
+    height: 75vh;
+}
+
+.row {
+    display: table-row;
+}
+
+.cell {
+    display: table-cell;
+    width: 50px;
+    height: 25px;
+    border: 1px solid #000000;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.cell:hover {
+    background-color: #eee;
+}
+
+.cell--active {
+    background-color: #ff0000;
+    color: #fff;
+  }
+
+  .bold-column {
+    border-right: 2px solid black;
+    font-weight: bold;
+  }
+  
