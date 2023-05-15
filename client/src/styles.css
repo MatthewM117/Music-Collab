@@ -1,6 +1,7 @@
 .grid {
     display: table;
     border-collapse: collapse;
+    position: relative;
 }
 
 .grid-container {
@@ -32,8 +33,26 @@
     color: #fff;
   }
 
-  .bold-column {
+.bold-column {
     border-right: 2px solid black;
     font-weight: bold;
-  }
-  
+}
+
+.bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 1px;
+    background-color: red;
+    animation: none;
+}
+
+@keyframes moveBar {
+    0% {
+        left: 0;
+    }
+    100% {
+        left: 500vw; /* Adjust the width of the grid container in pixels */
+    }
+}
