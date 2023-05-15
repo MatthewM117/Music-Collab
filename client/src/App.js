@@ -16,6 +16,9 @@ function App() {
   const secondsPerBeat = 60 / bpm;
   const cellSize = 2000;
   const animationDuration = (beatsPerMeasure * secondsPerBeat * 1000 * cellSize) / 100;
+  let animationFrameId = useRef(null);
+  let debounce = useRef(false);
+  let prevCell = useRef(null);
 
   const joinRoom = () => {
     if (room !== '') {
@@ -31,6 +34,10 @@ function App() {
     socket.on('receive_message', (data) => {
       setMessageReceived(data.message);
     });
+
+    socket.on('receive_bpm', (data) => {
+      setBpm(data.newBpm);
+    })
   }, [socket]);
 
   useEffect(() => {
@@ -55,7 +62,14 @@ function App() {
 
     // left click
     if (event.button === 0) {
-      newGridData[rowIndex][cellIndex] = 'X';
+      switch (rowIndex) {
+        case 0:
+          newGridData[rowIndex][cellIndex] = 'C1';
+          break;
+        default:
+          newGridData[rowIndex][cellIndex] = 'C2';
+          break;
+      }
     }
     // right click
     else if (event.button === 2) {
@@ -92,6 +106,9 @@ function App() {
       barRef.current.style.animation = `moveBar ${animationDuration / 1000}s linear infinite`;
     } else {
       barRef.current.style.animation = '';
+      cancelAnimationFrame(animationFrameId.current);
+      debounce.current = false;
+      prevCell.current = null;
     }
   }, [isBarMoving, animationDuration]);
 
@@ -104,44 +121,40 @@ function App() {
   };
 
   const handleAnimInputChange = (event) => {
-    setBpm(Number(event.target.value));
+    const newBpm = Number(event.target.value)
+    setBpm(newBpm);
+
+    // send new bpm value to other users in the room
+    socket.emit('update_bpm', {newBpm, room})
   }
 
-  let debounce = false;
-  let prevI = -1;
   const checkCellBackgroundColor = () => {
     const barPosition = barRef.current.getBoundingClientRect();
-    const cells = document.getElementsByClassName('cell--active');
-
-    for (let i = 0; i < cells.length; i++) {
-      const cellPosition = cells[i].getBoundingClientRect();
-
+    //const cells = document.getElementsByClassName('cell--active');
+    const cells = document.querySelectorAll('.cell--active');
+    cells.forEach(cell => {
+      const cellPosition = cell.getBoundingClientRect();
       if (
         barPosition.left <= cellPosition.right &&
         barPosition.right >= cellPosition.left &&
         barPosition.top <= cellPosition.bottom &&
         barPosition.bottom >= cellPosition.top
       ) {
-        const cellColor = window.getComputedStyle(cells[i]).backgroundColor;
-
-        if (!debounce) {
-          console.log('touched a note');
-          if (cellColor === 'rgb(255, 0, 0)') {
-            console.log("RED!");
+        if (!debounce.current && cell !== prevCell.current) {
+          debounce.current = true;
+          prevCell.current = cell;
+          if (cell.textContent === 'C2') {
+            console.log("playing c2");
           }
-          debounce = true;
-          prevI = i;
+          
         }
-
-        if (prevI !== i) {
-          debounce = false;
-        }
+      } else if (cell === prevCell.current) {
+        debounce.current = false;
       }
-      //console.log(prevI, " ", i);
-    }
+    });
 
     if (isBarMoving) {
-      requestAnimationFrame(checkCellBackgroundColor);
+      animationFrameId.current = requestAnimationFrame(checkCellBackgroundColor);
     }
   };
 
@@ -154,7 +167,7 @@ function App() {
 
   useEffect(() => {
     if (isBarMoving) {
-      requestAnimationFrame(checkCellBackgroundColor);
+      animationFrameId.current = requestAnimationFrame(checkCellBackgroundColor);
     }
   }, [isBarMoving]);
 

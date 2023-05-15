@@ -26,7 +26,11 @@ io.on('connection', (socket) => {
 
     socket.on('update_grid', (data) => {
         socket.to(data.room).emit('receive_grid', data);
-    })
+    });
+
+    socket.on('update_bpm', (data) => {
+        socket.to(data.room).emit('receive_bpm', data);
+    });
 });
 
 server.listen(3001, () => {
