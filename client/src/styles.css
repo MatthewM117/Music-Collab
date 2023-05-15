@@ -31,6 +31,7 @@
 .cell--active {
     background-color: #ff0000;
     color: #fff;
+    font-size: 12px;
   }
 
 .bold-column {
