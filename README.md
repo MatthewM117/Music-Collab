@@ -17,3 +17,6 @@ Simply click the link above, type in a username, and join a room! The room numbe
 
 # Limitations
 This is just a simple piano roll for brainstorming song ideas with others. It is not meant to be used to create final products of songs. The purpose of this is to create basic melodies with others, and then once you find a melody you like, transfer it into an actual DAW such as FL Studio. As such, this program only features a basic piano roll with an adjustable bpm, and no save functionality. Also, the sustain of the notes cannot be changed.
+
+# Note:
+This is the main repo for this project, however it is not where the production build is held. The final build of this project can be found at https://github.com/MatthewM117/music-collab-backend which is the repo I use to host the website instead of this one due to technical limitations regarding hosting a reactJS website with a node.js backend.
