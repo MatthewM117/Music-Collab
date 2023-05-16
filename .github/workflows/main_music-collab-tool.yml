@@ -52,5 +52,5 @@ jobs:
         with:
           app-name: 'music-collab-tool'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AFB6875E7EB64B648A31EAA1197372C6 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7E285B6C19B34E97991B268B20E9F91B }}
           package: .
