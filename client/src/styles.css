@@ -1,3 +1,12 @@
+body {
+    background-color: rgb(54, 52, 52);
+    color: white;
+}
+
+input {
+    background-color: gray;
+}
+
 .grid {
     display: table;
     border-collapse: collapse;
@@ -30,8 +39,8 @@
 }
 
 .cell--active {
-    background-color: #ff0000;
-    color: #fff;
+    background-color: darkgreen;
+    color: white;
     font-size: 12px;
   }
 
@@ -57,4 +66,22 @@
     100% {
         left: 500vw; /* Adjust the width of the grid container in pixels */
     }
+}
+
+#chat-box {
+    position: absolute;
+    height: 60vh;
+    width: 20vw;
+    background-color: rgb(11, 0, 96);
+    right: 2%;
+    top: 20%;
+    border: 5px solid gray;
+    overflow: hidden;
+    overflow-y: scroll;
+    text-align: left;
+}
+
+.form {
+    position: fixed;
+    top: 82%;
 }

@@ -91,9 +91,10 @@ import Gb5 from './piano-notes/Gb5.mp3'
 import Gb6 from './piano-notes/Gb6.mp3'
 import Gb7 from './piano-notes/Gb7.mp3'
 
-const socket = io.connect("http://localhost:3001");
+const socket = io.connect('http://localhost:3001');
 
 function App() {
+
   const [room, setRoom] = useState('');
   const [message, setMessage] = useState('');
   const [messageReceived, setMessageReceived] = useState('');
@@ -107,17 +108,66 @@ function App() {
   let animationFrameId = useRef(null);
   let debounce = useRef(false);
   let prevCell = useRef(null);
+  const [username, setUsername] = useState('Guest');
+  const [inputValue, setInputValue] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const chatBoxRef = useRef(null);
+  let doOnce = useRef(false);
+  const chatInputFocus = useRef(false);
+
+  const resetDoOnce = () => {
+    doOnce.current = false;
+  }
 
   const joinRoom = () => {
     if (room !== '') {
-      socket.emit('join_room', room);
+      socket.emit('join_room', {room, username});
+      receiveMessage(`joined room ${room}`, `${username} (you)`);
     }
   };
+  
+  function receiveMessage(theMessage, theUsername) {
+    if (!doOnce.current) {
+      doOnce.current = true;
+      if (theUsername === '') {
+        theUsername = 'Guest';
+      }
+      const div = document.createElement("div");
+      div.textContent = `${theUsername}: ${theMessage}`;
+      if (theUsername === 'Server') {
+        div.style = 'padding-left: 2%; color: #D8BFD8';
+      }
+      else {
+        div.style = 'padding-left: 2%';
+      }
+      
+      document.getElementById("chat-box").append(div);
+
+      const chatBoxElement = chatBoxRef.current
+      chatBoxElement.scrollTop = chatBoxElement.scrollHeight;
+
+      setTimeout(resetDoOnce, 500);
+    }
+  }
 
   useEffect(() => {
     socket.on('receive_bpm', (data) => {
       setBpm(data.newBpm);
-    })
+      receiveMessage(`BPM changed to ${data.newBpm}`, 'Server');
+    });
+
+    socket.on('joined_room', (data) => {
+      receiveMessage(`${data} joined the room`, 'Server');
+    });
+
+    socket.on('receive_message', (data) => {
+      receiveMessage(data.message, data.username);
+    });
+
+    socket.on('user_disconnected', (data) => {
+      receiveMessage(`${data} disconnected`, 'Server');
+    });
+
   }, [socket]);
 
   useEffect(() => {
@@ -129,6 +179,22 @@ function App() {
       setGridData(newGrid);
     });
   }, [gridData, socket]);
+
+  const resetGrid = () => {
+    const newGridData = [...gridData]
+    for (let i = 0; i < newGridData.length; i++) {
+      for (let j = 0; j < newGridData[i].length; j++) {
+        if (newGridData[i][j] !== '') {
+          newGridData[i][j] = '';
+          const rowIndex = i;
+          const cellIndex = j;
+          const value = '';
+          socket.emit('update_grid', {rowIndex, cellIndex, value, room});
+        }
+      }
+    }
+    setGridData(newGridData);
+  };
 
   function handleClick(event, rowIndex, cellIndex) {
     
@@ -451,7 +517,8 @@ function App() {
 
   // keyboard input
   const handleKeyDown = (event) => {
-    if (event.code === 'Space') {
+    console.log(chatInputFocus);
+    if (event.code === 'Space' && !chatInputFocus.current) {
       event.preventDefault();
       toggleBarAnimation();
     }
@@ -463,7 +530,8 @@ function App() {
 
     // send new bpm value to other users in the room
     socket.emit('update_bpm', {newBpm, room})
-  }
+    receiveMessage(`BPM changed to ${newBpm}`, 'Server');
+  };
 
   const audioSources = {
     C8: C8,
@@ -610,19 +678,72 @@ function App() {
     }
   }, [isBarMoving]);
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    console.log(message);
+
+    setInputValue('');
+    setSubmitted(true);
+
+    const div = document.createElement("div");
+    div.textContent = `${username} (you): ${message}`;
+    div.style = 'padding-left: 2%';
+    document.getElementById("chat-box").append(div);
+
+    const chatBoxElement = chatBoxRef.current
+    chatBoxElement.scrollTop = chatBoxElement.scrollHeight;
+
+    socket.emit('send_message', {message, username, room});
+  };
+
+  const handleMessageChange = (event) => {
+    setMessage(event.target.value);
+
+    if (submitted) {
+      setSubmitted(false);
+    }
+    setInputValue(event.target.value);
+  };
+
+  const handleChatInputFocus = () => {
+    chatInputFocus.current = true;
+  };
+
+  const handleChatInputBlur = () => {
+    chatInputFocus.current = false;
+  };
+
   return (
     <div className="App">
+      <label htmlFor="usernameInput">Username:</label>
+      <input id="bpmInput" placeholder='Enter username...' autoComplete='off' value={username} onFocus={handleChatInputFocus} onBlur={handleChatInputBlur} onChange={(event) => {
+        setUsername(event.target.value);
+      }} />
       <input 
         placeholder='Room number...'
+        autoComplete='off'
         onChange={(event) => {
           setRoom(event.target.value);
         }}
       />
       <button onClick={joinRoom}> Join Room </button>
-
-      <label htmlFor="bpmInput">BPM:</label>
+      <br></br>
+      <br></br>
+      <label htmlFor="bpmInput" autoComplete='off'>BPM:</label>
       <input id="bpmInput" type="number" value={bpm} onChange={handleAnimInputChange} />
-      
+      <br></br>
+      <br></br>
+      <button onClick={resetGrid}> Reset </button>
+
+      <div id="chat-box" ref={chatBoxRef}>
+        <form className="form" onSubmit={handleSubmit}>
+          <label htmlFor="message-input"></label>
+          <input type="text" id="message-input" autoComplete='off' placeholder='Enter message...' value={submitted ? '' : inputValue} onChange={handleMessageChange} onFocus={handleChatInputFocus} onBlur={handleChatInputBlur}></input>
+          <button type="submit" id="send-msg-button">Send</button>
+        </form>
+      </div>
+
       <div className="grid-container">
         <div className="grid" style={{ height: "100vh", width: "500vw" }}>
         <div ref={barRef} className="bar"></div>
