@@ -2,6 +2,7 @@
     display: table;
     border-collapse: collapse;
     position: relative;
+    top: 10%;
 }
 
 .grid-container {

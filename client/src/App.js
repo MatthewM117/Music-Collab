@@ -114,15 +114,7 @@ function App() {
     }
   };
 
-  const sendMessage = () => {
-    socket.emit('send_message', {message, room})
-  };
-
   useEffect(() => {
-    socket.on('receive_message', (data) => {
-      setMessageReceived(data.message);
-    });
-
     socket.on('receive_bpm', (data) => {
       setBpm(data.newBpm);
     })
@@ -627,16 +619,10 @@ function App() {
         }}
       />
       <button onClick={joinRoom}> Join Room </button>
-      <input placeholder="Send message..." onChange={(event) => {
-        setMessage(event.target.value);
-      }}/>
-      <button onClick={sendMessage}>Send</button>
-      <h1> Message: </h1>
-      {messageReceived}
 
       <label htmlFor="bpmInput">BPM:</label>
       <input id="bpmInput" type="number" value={bpm} onChange={handleAnimInputChange} />
-
+      
       <div className="grid-container">
         <div className="grid" style={{ height: "100vh", width: "500vw" }}>
         <div ref={barRef} className="bar"></div>

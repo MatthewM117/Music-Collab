@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 app.use(cors());
+app.use(express.static(process.cwd()+"../client/build/"))
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -20,10 +21,6 @@ io.on('connection', (socket) => {
         socket.join(data);
     });
 
-    socket.on('send_message', (data) => {
-        socket.to(data.room).emit('receive_message', data);
-    });
-
     socket.on('update_grid', (data) => {
         socket.to(data.room).emit('receive_grid', data);
     });
@@ -33,6 +30,10 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3001, () => {
+app.get('/', (req,res) => {
+    res.sendFile(process.cwd()+"../client/build/index.html");
+});
+
+server.listen(8080, () => {
     console.log("Server is running.");
 });
